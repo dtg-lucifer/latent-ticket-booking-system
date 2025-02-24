@@ -14,7 +14,7 @@ suite("User Routes", () => {
   describe("Auth: Signup Endpoint tests", () => {
     it("should validate user credentials", async () => {
       const response = await post(`${BACKEND_URL}/auth/signup`, {
-        number: PHONE_NUMBER_1,
+        phoneNumber: PHONE_NUMBER_1,
       });
 
       expect(response.status).toBe(HttpStatusCode.Ok);
@@ -32,7 +32,7 @@ suite("User Routes", () => {
 
     it("should prevent double signup", async () => {
       const response = await post(`${BACKEND_URL}/auth/signup`, {
-        number: PHONE_NUMBER_1,
+        phoneNumber: PHONE_NUMBER_1,
       });
 
       expect(response.status).toBe(HttpStatusCode.BadRequest);
