@@ -4,10 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc -b",
+    "dev": "nodemon --ignore 'logs/*.log' src/index.ts",
+    "start": "NODE_ENV=production node dist/index.js"
   },
   "devDependencies": {
     "@repo/typescript-config": "*",
+    "@types/authenticator": "^1.1.4",
     "@types/express": "^5.0.0",
     "@types/morgan": "^1.9.9",
     "@types/winston": "^2.4.4",
@@ -18,6 +21,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "authenticator": "^1.1.5",
     "express": "^4.21.2",
     "morgan": "^1.10.0",
     "winston": "^3.17.0"
