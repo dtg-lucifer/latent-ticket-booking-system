@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum PaymentState {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+enum SeatStatus {
+  AVAILABLE
+  BOOKED
+}
+
+model User {
+  id       String  @id @default(uuid())
+  number   String  @unique
+  name     String
+  email    String  @unique
+  verified Boolean @default(false)
+  role     Role    @default(USER)
+}
+
+model Admin {
+  id       String  @id @default(uuid())
+  number   String  @unique
+  name     String
+  email    String  @unique
+  verified Boolean @default(false)
+  role     Role    @default(ADMIN)
+}
+
+model Event {
+  id          String @id @default(uuid())
+  title       String
+  description String
+  banner      String
+}
+
+model Booking {
+  id      String @id @default(uuid())
+  eventId String
+  userId  String
+}
+
+model SeatType {
+  id          String @id @default(uuid())
+  name        String
+  event       String
+  price       Int
+  description String
+}
+
+model Seat {
+  id     String     @id @default(uuid())
+  type   String
+  status SeatStatus @default(AVAILABLE)
+}
+
+model Payment {
+  id      String       @id @default(uuid())
+  eventId String
+  userId  String
+  status  PaymentState @default(PENDING)
+}
