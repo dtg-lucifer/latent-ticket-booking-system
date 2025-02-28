@@ -1,1 +1,1 @@
-{"root":["./src/index.ts","./src/routes/v1/_index.ts","./src/routes/v1/auth.route.ts","./src/utils/logger.ts"],"version":"5.7.3"}
+{"root":["./src/index.ts","./src/lib/logger.ts","./src/lib/utils.ts","./src/routes/v1/_index.ts","./src/routes/v1/auth.route.ts"],"version":"5.7.3"}

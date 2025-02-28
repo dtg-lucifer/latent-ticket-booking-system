@@ -1,4 +1,4 @@
-import axios, { AxiosError, HttpStatusCode } from "axios";
+import { HttpStatusCode } from "axios";
 import { describe, expect, it, suite } from "vitest";
 import { post } from "./utils";
 
