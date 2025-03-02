@@ -24,12 +24,14 @@ enum SeatStatus {
 }
 
 model User {
-  id       String  @id @default(uuid())
-  number   String  @unique
+  id       String    @id @default(uuid())
+  number   String    @unique
   name     String
-  email    String  @unique
-  verified Boolean @default(false)
-  role     Role    @default(USER)
+  email    String    @unique
+  verified Boolean   @default(false)
+  role     Role      @default(USER)
+  bookings Booking[]
+  payments Payment[]
 }
 
 model Admin {
@@ -39,19 +41,27 @@ model Admin {
   email    String  @unique
   verified Boolean @default(false)
   role     Role    @default(ADMIN)
+  events   Event[]
 }
 
 model Event {
-  id          String @id @default(uuid())
+  id          String    @id @default(uuid())
   title       String
   description String
   banner      String
+  adminId     String
+  admin       Admin     @relation(fields: [adminId], references: [id])
+  bookings    Booking[]
+  payments    Payment[]
 }
 
 model Booking {
   id      String @id @default(uuid())
   eventId String
   userId  String
+  seats   Seat[]
+  event   Event  @relation(fields: [eventId], references: [id])
+  user    User   @relation(fields: [userId], references: [id])
 }
 
 model SeatType {
@@ -60,12 +70,16 @@ model SeatType {
   event       String
   price       Int
   description String
+  seat        Seat[]
 }
 
 model Seat {
-  id     String     @id @default(uuid())
-  type   String
-  status SeatStatus @default(AVAILABLE)
+  id         String     @id @default(uuid())
+  status     SeatStatus @default(AVAILABLE)
+  booking    Booking?   @relation(fields: [bookingId], references: [id])
+  bookingId  String?
+  type       SeatType   @relation(fields: [seatTypeId], references: [id])
+  seatTypeId String
 }
 
 model Payment {
@@ -73,4 +87,6 @@ model Payment {
   eventId String
   userId  String
   status  PaymentState @default(PENDING)
+  event   Event        @relation(fields: [eventId], references: [id])
+  user    User         @relation(fields: [userId], references: [id])
 }
