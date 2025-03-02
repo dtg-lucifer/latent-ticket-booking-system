@@ -1,3 +1,7 @@
+/**
+ * Main schema for the db
+ * @maintainer dtg-lucifer
+ */
 generator client {
   provider = "prisma-client-js"
 }

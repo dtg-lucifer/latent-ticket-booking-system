@@ -1,6 +1,16 @@
+/**
+ * The entry point for the server
+ * @maintainer dtg-lucifer
+ * @repo https://github.com/dtg-lucifer/latent-ticket-booking-system
+ */
+
 import express from "express";
-import { info, loggerMiddleware } from "./lib/logger";
+import { info, loggerMiddleware } from "./middlewares/logger";
 import { mainRouter } from "./routes/v1/_index";
+import { StatusCodes } from "http-status-codes";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app = express();
 
@@ -10,12 +20,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(loggerMiddleware);
 
-app.use(`${API_VERSION}/`, mainRouter);
+app.use(`${API_VERSION}`, mainRouter);
 
 app.get("/health", (req, res) => {
-  res.status(200).json({ status: "UP" });
+  res.status(StatusCodes.OK).json({ status: "UP" });
 });
 
-app.listen(process.env.PORT ?? 8998, () => {
-  info("Server listening at port 8998");
+app.listen(process.env.PORT || 8080, () => {
+  info(`Server listening at port ${process.env.PORT || 8080}`);
 });
