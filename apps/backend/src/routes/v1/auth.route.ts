@@ -15,7 +15,7 @@ import { StatusCodes } from "http-status-codes";
 import { PrismaClientValidationError } from "@prisma/client/runtime/library";
 import { User } from "@prisma/client";
 import jwt from "jsonwebtoken";
-import { JWT_EXPIRY, JWT_SECRET } from "../../config";
+import { JWT_SECRET } from "../../config";
 
 const authRouter = Router();
 
@@ -64,7 +64,7 @@ authRouter.post(
     const requestId = uuidv4();
     const totp = generateToken(number + "SIGNUP");
     if (process.env.NODE_ENV === "production") {
-      // TODO send the otp to the number
+      // TODO: send the otp to the number
     }
 
     log.info(`Generated TOTP for ${number}: ${totp}, requestId: ${requestId}`);
@@ -117,12 +117,24 @@ authRouter.post(
     }
 
     const requestId = uuidv4();
-    const token = jwt.sign({ id: user.id, requestId }, JWT_SECRET as string, {
-      algorithm: "HS512",
-      expiresIn: JWT_EXPIRY as string,
-    });
+    let token: string;
 
-    res.status(StatusCodes.OK).json({ message: "User verified", token });
+    try {
+      token = jwt.sign({ id: user.id, requestId }, JWT_SECRET as string, {
+        algorithm: "HS512",
+        expiresIn: "1d",
+      });
+    } catch (e) {
+      log.error((e as Error).message);
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        error: "Failed to generate token",
+      });
+      return;
+    }
+
+    res
+      .status(StatusCodes.OK)
+      .json({ message: "User verified", accessToken: token, requestId });
   }
 );
 
