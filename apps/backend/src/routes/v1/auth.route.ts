@@ -16,8 +16,11 @@ import { PrismaClientValidationError } from "@prisma/client/runtime/library";
 import { User } from "@prisma/client";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../../config";
+import { Transport } from "../../lib/utils";
 
 const authRouter = Router();
+
+// TODO: Add some more loggin info and details to the error lines and also to the sucess lines
 
 /**
  * @description
@@ -46,6 +49,7 @@ authRouter.post(
     } catch (e) {
       if (e instanceof Error) {
         log.error(e.message);
+        log.error(e.stack);
       } else if (e instanceof PrismaClientValidationError) {
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
           error: "Failed to create or validate user",
@@ -63,9 +67,25 @@ authRouter.post(
 
     const requestId = uuidv4();
     const totp = generateToken(number + "SIGNUP");
-    if (process.env.NODE_ENV === "production") {
-      // TODO: send the otp to the number
+
+    // if (process.env.NODE_ENV === "production") {
+    try {
+      await Transport.sendMessage(
+        `+91${number}`,
+        `Your OTP is ${totp}, please verify your account.
+          \n\nName: ${req.body.name}
+          \nEmail: ${req.body.email}
+          \nRequestId: ${requestId}`
+      );
+    } catch (e) {
+      log.error("Inside the auth.route.ts file, while sending the otp");
+      log.error(e);
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        error: "Failed to send OTP",
+      });
+      return;
     }
+    // }
 
     log.info(`Generated TOTP for ${number}: ${totp}, requestId: ${requestId}`);
 
