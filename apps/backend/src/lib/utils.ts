@@ -17,7 +17,6 @@ const sendMessage = async (to: string, body: string) => {
       from: process.env.TWILIO_PHONE_NUMBER,
       body,
     },
-    // @info - Although there is no need for this callback, but it is still there
     (err, m) => {
       if (err) {
         log.error("Failed to send message : { src/lib/utils.ts }");
