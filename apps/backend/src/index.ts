@@ -20,6 +20,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(loggerMiddleware);
 
+// Apply authentication middleware
+
 app.use(`${API_VERSION}`, mainRouter);
 
 app.get("/health", (req, res) => {
