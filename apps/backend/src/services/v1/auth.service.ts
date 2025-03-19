@@ -6,8 +6,7 @@
  */
 
 import { User } from "@prisma/client";
-import { Request, Response } from "express";
-import { StatusCodes } from "http-status-codes";
+import { Request } from "express";
 import { Transport, ToTp } from "../../lib/utils";
 import { v4 as uuidv4 } from "uuid";
 import { __db } from "@repo/db/client";
@@ -15,13 +14,9 @@ import { PrismaClientValidationError } from "@prisma/client/runtime/library";
 import { log } from "../../middlewares/logger";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET, OTP_SECRET } from "../../config";
-import { AuthResponse } from "../../utils/types";
+import { AuthError, AuthResponse } from "../../utils/types";
 
-async function signUpUser(
-  number: string,
-  req: Request,
-  res: Response
-): Promise<AuthResponse> {
+async function signUpUser(number: string, req: Request): Promise<AuthResponse> {
   let nonVeriFiedUser: User;
   try {
     nonVeriFiedUser = await __db.user.upsert({
@@ -40,9 +35,7 @@ async function signUpUser(
       log.error(e.message);
       log.error(e.stack);
     } else if (e instanceof PrismaClientValidationError) {
-      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        error: "Failed to create or validate user",
-      });
+      throw new AuthError("Failed to create or validate user", 500);
     }
     return {
       verified: false,
@@ -54,16 +47,7 @@ async function signUpUser(
   }
 
   if (nonVeriFiedUser.verified) {
-    res
-      .status(StatusCodes.BAD_REQUEST)
-      .json({ error: "User already verified" });
-    return {
-      verified: true,
-      done: true,
-      requestId: "",
-      user: nonVeriFiedUser,
-      token: null,
-    };
+    throw new AuthError("User already verified", 400);
   }
 
   const requestId = uuidv4();
@@ -82,16 +66,7 @@ async function signUpUser(
     } catch (e) {
       log.error("Inside the auth.route.ts file, while sending the otp");
       log.error(e);
-      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        error: "Failed to send OTP",
-      });
-      return {
-        verified: false,
-        done: false,
-        requestId: "",
-        user: null,
-        token: null,
-      };
+      throw new AuthError("Failed to send OTP", 500);
     }
   }
 
@@ -113,38 +88,55 @@ async function verifyUser(
   otp: string,
   requestId: string,
   req: Request,
-  res: Response
+  isLogin: boolean = false
 ): Promise<AuthResponse> {
   if (!ToTp.verifyAlphanumericOTP(number, OTP_SECRET, requestId, otp)) {
-    res.status(StatusCodes.UNAUTHORIZED).json({ error: "Invalid OTP" });
-    return {
-      verified: false,
-      done: false,
-      requestId: "",
-      user: null,
-      token: null,
-    };
+    throw new AuthError("Invalid OTP", 401);
   }
 
-  let user: User;
-  // make the user verified if the otp is verified
+  let user: User | null;
   try {
-    user = await __db.user.update({
+    user = await __db.user.findUnique({
       where: {
         number,
       },
-      data: {
-        verified: true,
-      },
     });
+
+    if (!user) {
+      throw new AuthError("User not found", 400);
+    }
+
+    /**
+     * For signup verification, update the user to verified if not already
+     */
+    if (!isLogin && !user.verified) {
+      user = await __db.user.update({
+        where: {
+          number,
+        },
+        data: {
+          verified: true,
+        },
+      });
+    } else if (isLogin && !user.verified) {
+      /**
+       * For login, check if the user is already verified
+       * when login query is sent to the request url
+       */
+      throw new AuthError("Please complete signup verification first", 400);
+    }
   } catch (e) {
+    if (e instanceof AuthError) {
+      throw e;
+    }
+
     if (e instanceof Error) {
       log.error(e.message);
+      throw new AuthError("Looks like something is broken", 500);
     } else if (e instanceof PrismaClientValidationError) {
-      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        error: "Failed to update user",
-      });
+      throw new AuthError("Failed to find user", 500);
     }
+
     return {
       verified: false,
       done: false,
@@ -168,16 +160,7 @@ async function verifyUser(
     );
   } catch (e) {
     log.error((e as Error).message);
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-      error: "Failed to generate token",
-    });
-    return {
-      verified: false,
-      done: false,
-      requestId: "",
-      user: null,
-      token: null,
-    };
+    throw new AuthError("Failed to generate token", 500);
   }
 
   return {
@@ -189,11 +172,7 @@ async function verifyUser(
   };
 }
 
-async function loginUser(
-  number: string,
-  req: Request,
-  res: Response
-): Promise<AuthResponse> {
+async function loginUser(number: string, req: Request): Promise<AuthResponse> {
   const requestId = uuidv4();
 
   const user = await __db.user.findUnique({
@@ -203,25 +182,11 @@ async function loginUser(
   });
 
   if (!user) {
-    res.status(StatusCodes.BAD_REQUEST).json({ error: "User not found" });
-    return {
-      verified: false,
-      done: false,
-      requestId: "",
-      user: null,
-      token: null,
-    };
+    throw new AuthError("User not found", 400);
   }
 
   if (!user.verified) {
-    res.status(StatusCodes.BAD_REQUEST).json({ error: "User not verified" });
-    return {
-      verified: false,
-      done: false,
-      requestId,
-      user: null,
-      token: null,
-    };
+    throw new AuthError("User not verified", 400);
   }
   const otp = ToTp.generateAlphanumericOTP(number, OTP_SECRET, requestId);
 
@@ -237,16 +202,7 @@ async function loginUser(
     } catch (e) {
       log.error("Inside the auth.route.ts file, while sending the otp");
       log.error(e);
-      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        error: "Failed to send OTP",
-      });
-      return {
-        verified: false,
-        done: false,
-        requestId: "",
-        user: null,
-        token: null,
-      };
+      throw new AuthError("Failed to send OTP", 500);
     }
   }
 
@@ -267,4 +223,5 @@ export const AuthService = {
   signUpUser,
   verifyUser,
   loginUser,
+  AuthError,
 };

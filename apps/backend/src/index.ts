@@ -5,10 +5,12 @@
  */
 
 import express from "express";
-import { info, loggerMiddleware } from "./middlewares/logger";
+import { log, loggerMiddleware } from "./middlewares/logger";
 import { mainRouter } from "./routes/v1/_index";
 import { StatusCodes } from "http-status-codes";
 import dotenv from "dotenv";
+import { errorHandler } from "./middlewares/error_handler";
+import { AuthError } from "./utils/types";
 
 dotenv.config();
 
@@ -16,18 +18,31 @@ const app = express();
 
 const API_VERSION = "/api/v1";
 
+// Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(loggerMiddleware);
 
-// Apply authentication middleware
-
+// Attach main router
 app.use(`${API_VERSION}`, mainRouter);
 
-app.get("/health", (req, res) => {
-  res.status(StatusCodes.OK).json({ status: "UP" });
+// Catch 404 and forward to error handler
+app.use((req, res, next) => {
+  const err = new AuthError("Not Found", 404);
+  next(err);
+});
+
+app.use(errorHandler);
+
+// Handle uncaught exceptions to prevent server from crashing
+process.on("uncaughtException", (error) => {
+  log.error("Uncaught Exception:", error);
+});
+
+process.on("unhandledRejection", (reason, promise) => {
+  log.error("Unhandled Rejection at:", promise, "reason:", reason);
 });
 
 app.listen(process.env.PORT || 8080, () => {
-  info(`Server listening at port ${process.env.PORT || 8080}`);
+  log.info(`Server listening at port ${process.env.PORT || 8080}`);
 });

@@ -7,8 +7,17 @@
 
 import { Router } from "express";
 import { authRouter } from "./auth.route";
+import { log } from "../../middlewares/logger";
 
 const mainRouter = Router();
+
+mainRouter.use("/health", (req, res) => {
+  log.info("Health check request received from: " + req.ip);
+  res.status(200).json({
+    message: "Server is up and running",
+    status: "success",
+  });
+});
 
 mainRouter.use("/auth", authRouter);
 

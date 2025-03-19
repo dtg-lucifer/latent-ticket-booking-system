@@ -6,7 +6,7 @@
 import { Request, Response, Router } from "express";
 import { bodyValidator } from "../../middlewares/body_validators";
 import { OtpSchema, SignUpUserSchema } from "../../lib/schema";
-import { SafeUser } from "../../utils/types";
+import { AuthResponse, SafeUser } from "../../utils/types";
 import { StatusCodes } from "http-status-codes";
 import { User } from "@prisma/client";
 import { AuthService } from "../../services/v1/auth.service";
@@ -23,9 +23,19 @@ authRouter.post(
   async (req, res) => {
     const { number } = req.body;
 
-    const response = await AuthService.signUpUser(number, req, res);
+    let response: AuthResponse;
 
-    if (!response.done) return;
+    try {
+      response = await AuthService.signUpUser(number, req);
+    } catch (error) {
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        message: "Internal Server Error",
+        error: (error as Error).message,
+      });
+      return;
+    }
+
+    if (!response.done && !response.verified) return;
 
     const { role, ...safeUser } = response.user as User;
 
@@ -43,14 +53,25 @@ authRouter.post(
  */
 authRouter.post("/verify", bodyValidator(OtpSchema), async (req, res) => {
   const { otp, number, requestId } = req.body;
+  const login = req.query.login;
 
-  const response = await AuthService.verifyUser(
-    number,
-    otp,
-    requestId,
-    req,
-    res
-  );
+  let response: AuthResponse;
+
+  try {
+    response = await AuthService.verifyUser(
+      number,
+      otp,
+      requestId,
+      req,
+      login ? true : false
+    );
+  } catch (error) {
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      message: "Internal Server Error",
+      error: (error as Error).message,
+    });
+    return;
+  }
 
   if (!response.done) return;
 
@@ -67,7 +88,17 @@ authRouter.post(
   async (req: Request, res: Response) => {
     const { number } = req.body;
 
-    const response = await AuthService.loginUser(number, req, res);
+    let response: AuthResponse;
+
+    try {
+      response = await AuthService.loginUser(number, req);
+    } catch (error) {
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        message: "Internal Server Error",
+        error: (error as Error).message,
+      });
+      return;
+    }
 
     if (!response.done) return;
 
