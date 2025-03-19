@@ -26,7 +26,7 @@ export const AuthGuard = (req: Request, res: Response, next: NextFunction) => {
     log.warn(
       `Authentication failed: No valid Authorization header found for path ${req.path}`
     );
-    res.status(StatusCodes.BAD_REQUEST).json({
+    res.status(StatusCodes.UNAUTHORIZED).json({
       error: "Authentication required",
       message: "Please provide a valid authentication token",
     });

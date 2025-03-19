@@ -9,12 +9,13 @@ export const SignUpUserSchema = z.object({
   email: z.string().email(),
 });
 
-export const SignUpOtpSchema = z.object({
+export const OtpSchema = z.object({
   /**
    * This is for the otp verification part
    */
   otp: z.string().min(6).max(6),
   number: z.string().min(10).max(10),
+  requestId: z.string().uuid(),
 });
 
 // ---------------------------------------

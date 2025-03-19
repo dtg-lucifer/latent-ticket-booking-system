@@ -5,7 +5,7 @@
 
 import { Request, Response, Router } from "express";
 import { bodyValidator } from "../../middlewares/body_validators";
-import { SignUpOtpSchema, SignUpUserSchema } from "../../lib/schema";
+import { OtpSchema, SignUpUserSchema } from "../../lib/schema";
 import { SafeUser } from "../../utils/types";
 import { StatusCodes } from "http-status-codes";
 import { User } from "@prisma/client";
@@ -25,12 +25,7 @@ authRouter.post(
 
     const response = await AuthService.signUpUser(number, req, res);
 
-    if (!response.done) {
-      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        error: "It seems like it's us not you",
-      });
-      return;
-    }
+    if (!response.done) return;
 
     const { role, ...safeUser } = response.user as User;
 
@@ -46,21 +41,25 @@ authRouter.post(
  * @description
  * This route is used to verify the OTP sent to the user's phone number.
  */
-authRouter.post(
-  "/signup/verify",
-  bodyValidator(SignUpOtpSchema),
-  async (req, res) => {
-    const { otp, number } = req.body;
+authRouter.post("/verify", bodyValidator(OtpSchema), async (req, res) => {
+  const { otp, number, requestId } = req.body;
 
-    const response = await AuthService.verifyUser(otp, number, req, res);
+  const response = await AuthService.verifyUser(
+    number,
+    otp,
+    requestId,
+    req,
+    res
+  );
 
-    res.status(StatusCodes.OK).json({
-      message: "User verified",
-      accessToken: response.token,
-      requestId: response.requestId,
-    });
-  }
-);
+  if (!response.done) return;
+
+  res.status(StatusCodes.OK).json({
+    message: "User verified",
+    accessToken: response.token,
+    requestId: response.requestId,
+  });
+});
 
 authRouter.post(
   "/login",
@@ -70,12 +69,13 @@ authRouter.post(
 
     const response = await AuthService.loginUser(number, req, res);
 
-    if (!response.done) {
-      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        error: "It seems like it's us not you",
-      });
-      return;
-    }
+    if (!response.done) return;
+
+    res.status(StatusCodes.OK).json({
+      message: "User logged in",
+      accessToken: response.token,
+      requestId: response.requestId,
+    });
   }
 );
 
