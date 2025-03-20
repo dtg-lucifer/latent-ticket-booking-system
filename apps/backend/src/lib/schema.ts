@@ -1,5 +1,6 @@
 /**
  * @info Auth related schemas
+ * @maintainer dtg-lucifer <dev.bosepiush@gmail.com>
  */
 
 import z from "zod";
