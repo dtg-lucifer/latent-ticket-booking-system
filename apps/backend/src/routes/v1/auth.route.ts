@@ -6,7 +6,7 @@
 import { Request, Response, Router } from "express";
 import { bodyValidator } from "../../middlewares/body_validators";
 import { OtpSchema, SignUpUserSchema } from "../../lib/schema";
-import { AuthResponse, SafeUser } from "../../utils/types";
+import { AuthError, AuthResponse, SafeUser } from "../../utils/types";
 import { StatusCodes } from "http-status-codes";
 import { User } from "@prisma/client";
 import { AuthService } from "../../services/v1/auth.service";
@@ -28,9 +28,10 @@ authRouter.post(
     try {
       response = await AuthService.signUpUser(number, req);
     } catch (error) {
-      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        message: "Internal Server Error",
-        error: (error as Error).message,
+      res.status((error as AuthError).statusCode).json({
+        message: (error as AuthError).message,
+        error: (error as AuthError).name,
+        requestId: (error as AuthError).requestId,
       });
       return;
     }
@@ -66,9 +67,10 @@ authRouter.post("/verify", bodyValidator(OtpSchema), async (req, res) => {
       login ? true : false
     );
   } catch (error) {
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-      message: "Internal Server Error",
-      error: (error as Error).message,
+    res.status((error as AuthError).statusCode).json({
+      message: (error as AuthError).message,
+      error: (error as AuthError).name,
+      requestId: (error as AuthError).requestId,
     });
     return;
   }
@@ -77,6 +79,7 @@ authRouter.post("/verify", bodyValidator(OtpSchema), async (req, res) => {
 
   res.status(StatusCodes.OK).json({
     message: "User verified",
+    error: null,
     accessToken: response.token,
     requestId: response.requestId,
   });
@@ -93,9 +96,10 @@ authRouter.post(
     try {
       response = await AuthService.loginUser(number, req);
     } catch (error) {
-      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-        message: "Internal Server Error",
-        error: (error as Error).message,
+      res.status((error as AuthError).statusCode).json({
+        message: (error as AuthError).message,
+        error: (error as AuthError).name,
+        requestId: (error as AuthError).requestId,
       });
       return;
     }

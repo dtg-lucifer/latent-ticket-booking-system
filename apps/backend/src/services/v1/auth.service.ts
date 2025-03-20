@@ -15,9 +15,12 @@ import { log } from "../../middlewares/logger";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET, OTP_SECRET } from "../../config";
 import { AuthError, AuthResponse } from "../../utils/types";
+import { StatusCodes } from "http-status-codes";
 
 async function signUpUser(number: string, req: Request): Promise<AuthResponse> {
   let nonVeriFiedUser: User;
+  const requestId = uuidv4();
+
   try {
     nonVeriFiedUser = await __db.user.upsert({
       where: {
@@ -35,7 +38,7 @@ async function signUpUser(number: string, req: Request): Promise<AuthResponse> {
       log.error(e.message);
       log.error(e.stack);
     } else if (e instanceof PrismaClientValidationError) {
-      throw new AuthError("Failed to create or validate user", 500);
+      throw new AuthError("Failed to create or validate user", 500, requestId);
     }
     return {
       verified: false,
@@ -47,10 +50,12 @@ async function signUpUser(number: string, req: Request): Promise<AuthResponse> {
   }
 
   if (nonVeriFiedUser.verified) {
-    throw new AuthError("User already verified", 400);
+    throw new AuthError(
+      "User already verified",
+      StatusCodes.ACCEPTED,
+      requestId
+    );
   }
-
-  const requestId = uuidv4();
 
   const otp = ToTp.generateAlphanumericOTP(number, OTP_SECRET, requestId);
 
@@ -66,7 +71,11 @@ async function signUpUser(number: string, req: Request): Promise<AuthResponse> {
     } catch (e) {
       log.error("Inside the auth.route.ts file, while sending the otp");
       log.error(e);
-      throw new AuthError("Failed to send OTP", 500);
+      throw new AuthError(
+        "Failed to send OTP",
+        StatusCodes.INTERNAL_SERVER_ERROR,
+        requestId
+      );
     }
   }
 
@@ -103,7 +112,7 @@ async function verifyUser(
     });
 
     if (!user) {
-      throw new AuthError("User not found", 400);
+      throw new AuthError("User not found", 400, requestId);
     }
 
     /**
@@ -123,7 +132,11 @@ async function verifyUser(
        * For login, check if the user is already verified
        * when login query is sent to the request url
        */
-      throw new AuthError("Please complete signup verification first", 400);
+      throw new AuthError(
+        "Please complete signup verification first",
+        400,
+        requestId
+      );
     }
   } catch (e) {
     if (e instanceof AuthError) {
@@ -132,9 +145,9 @@ async function verifyUser(
 
     if (e instanceof Error) {
       log.error(e.message);
-      throw new AuthError("Looks like something is broken", 500);
+      throw new AuthError("Looks like something is broken", 500, requestId);
     } else if (e instanceof PrismaClientValidationError) {
-      throw new AuthError("Failed to find user", 500);
+      throw new AuthError("Failed to find user", 500, requestId);
     }
 
     return {
@@ -160,7 +173,7 @@ async function verifyUser(
     );
   } catch (e) {
     log.error((e as Error).message);
-    throw new AuthError("Failed to generate token", 500);
+    throw new AuthError("Failed to generate token", 500, requestId);
   }
 
   return {
@@ -182,11 +195,11 @@ async function loginUser(number: string, req: Request): Promise<AuthResponse> {
   });
 
   if (!user) {
-    throw new AuthError("User not found", 400);
+    throw new AuthError("User not found", 400, requestId);
   }
 
   if (!user.verified) {
-    throw new AuthError("User not verified", 400);
+    throw new AuthError("User not verified", 400, requestId);
   }
   const otp = ToTp.generateAlphanumericOTP(number, OTP_SECRET, requestId);
 
@@ -202,7 +215,7 @@ async function loginUser(number: string, req: Request): Promise<AuthResponse> {
     } catch (e) {
       log.error("Inside the auth.route.ts file, while sending the otp");
       log.error(e);
-      throw new AuthError("Failed to send OTP", 500);
+      throw new AuthError("Failed to send OTP", 500, requestId);
     }
   }
 
@@ -223,5 +236,4 @@ export const AuthService = {
   signUpUser,
   verifyUser,
   loginUser,
-  AuthError,
 };

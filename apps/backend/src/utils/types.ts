@@ -34,13 +34,32 @@ export interface AuthResponse {
  * This class can be used to throw authentication errors with specific status codes.
  * @param message - The error message
  * @param statusCode - The HTTP status code associated with the error
+ * @param requestId - Optional request ID for tracking the error
+ * @example
+ * throw new AuthError("User not found", 404);
+ * throw new AuthError("Invalid credentials", 401, requestId);
+ * @example
+ * const error = new AuthError("User not found", 404);
+ * console.error(error.message); // "User not found"
+ * console.error(error.statusCode); // 404
+ * console.error(error.name); // "AuthError"
+ * console.error(error.requestId); // null
  */
 export class AuthError extends Error {
   statusCode: number;
+  message: string;
+  name: string;
+  requestId: string | null;
 
-  constructor(message: string, statusCode: number) {
+  constructor(
+    message: string,
+    statusCode: number,
+    requestId: string | null = null
+  ) {
     super(message);
+    this.message = message;
     this.statusCode = statusCode;
+    this.requestId = requestId;
     this.name = "AuthError";
   }
 }
