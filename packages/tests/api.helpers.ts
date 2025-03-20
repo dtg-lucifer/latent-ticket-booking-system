@@ -1,6 +1,7 @@
 import { post } from "./utils";
 import { expect } from "vitest";
 import { StatusCodes } from "http-status-codes";
+import { get } from "axios";
 
 /**
  * API test utility functions that provide common test patterns
@@ -65,6 +66,12 @@ export const ApiHelpers = {
       error: null,
       message: response.data.message,
     };
+  },
+  /**
+   * Performs a healthcheck
+   */
+  async healthCheck(baseUrl: string) {
+    return await get(`${baseUrl}/health`);
   },
 
   /**

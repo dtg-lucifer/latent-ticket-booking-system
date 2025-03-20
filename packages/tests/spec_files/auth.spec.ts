@@ -1,7 +1,7 @@
 import { HttpStatusCode } from "axios";
 import { describe, expect, it, suite } from "vitest";
-import { post } from "./utils";
-import { ApiHelpers } from "./api.helpers";
+import { post } from "../utils";
+import { ApiHelpers } from "../api.helpers";
 
 const BACKEND_URL = "http://localhost:8998/api/v1";
 
