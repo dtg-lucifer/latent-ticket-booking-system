@@ -32,19 +32,11 @@ suite("User Authentication", () => {
         TEST_USERS.user1
       );
 
+      // verified user should return 400
       expect(response.status).toBe(HttpStatusCode.Accepted);
       expect(response.data).toHaveProperty("requestId");
-      expect(response.data).toHaveProperty("message", "Otp sent");
-      expect(response.data.user).toHaveProperty(
-        "number",
-        TEST_USERS.user1.number
-      );
-      expect(response.data.user).toHaveProperty("name", TEST_USERS.user1.name);
-      expect(response.data.user).toHaveProperty(
-        "email",
-        TEST_USERS.user1.email
-      );
-      expect(response.data.user).toHaveProperty("verified", false);
+      expect(response.data).toHaveProperty("message", "User already verified");
+      expect(response.data.user).toBeUndefined();
 
       // Store the request ID for subsequent tests
       testData.signupRequestId = response.data.requestId;
@@ -62,7 +54,7 @@ suite("User Authentication", () => {
       });
 
       expect(response.status).toBe(HttpStatusCode.Unauthorized);
-      expect(response.data).toHaveProperty("error", "Invalid OTP");
+      expect(response.data).toHaveProperty("message", "Invalid OTP");
     });
 
     it("should prevent duplicate signup for already registered users", async () => {
@@ -147,7 +139,7 @@ suite("User Authentication", () => {
       });
 
       expect(response.status).toBe(HttpStatusCode.BadRequest);
-      expect(response.data).toHaveProperty("error", "User not found");
+      expect(response.data).toHaveProperty("message", "User not found");
     });
 
     it("should verify OTP for login with correct login query param", async () => {

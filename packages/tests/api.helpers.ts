@@ -32,6 +32,7 @@ export const ApiHelpers = {
       exists: false,
       requestId: response.data.requestId,
       userData: response.data.user,
+      message: response.data.message,
     };
   },
 
@@ -51,6 +52,7 @@ export const ApiHelpers = {
         success: false,
         requestId: null,
         error: response.data.error,
+        message: response.data.message,
       };
     }
 
@@ -61,6 +63,7 @@ export const ApiHelpers = {
       success: true,
       requestId: response.data.requestId,
       error: null,
+      message: response.data.message,
     };
   },
 

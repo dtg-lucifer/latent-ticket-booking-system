@@ -1,5 +1,5 @@
 import { HttpStatusCode } from "axios";
-import { describe, expect, it, suite, beforeAll } from "vitest";
+import { describe, expect, it, suite } from "vitest";
 import { post } from "./utils";
 import { ApiHelpers } from "./api.helpers";
 
@@ -104,8 +104,9 @@ suite("Authentication API", () => {
 
       expect(loginResult.success).toBe(false);
       if (!exists) {
-        expect(loginResult.error).toBe("User not verified");
+        expect(loginResult.message).toBe("User not verified");
       }
+      expect(loginResult).toHaveProperty("requestId");
     });
 
     it("should handle login for existing verified users", async () => {
@@ -162,7 +163,7 @@ suite("Authentication API", () => {
 
         // It should fail due to invalid OTP, but the endpoint should exist
         expect(verifyResponse.status).toBe(HttpStatusCode.Unauthorized);
-        expect(verifyResponse.data).toHaveProperty("error", "Invalid OTP");
+        expect(verifyResponse.data).toHaveProperty("message", "Invalid OTP");
       }
     });
   });
