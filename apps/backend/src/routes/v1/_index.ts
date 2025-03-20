@@ -5,24 +5,21 @@
  * @maintainer dtg-lucifer <dev.bosepiush@gmail.com>
  */
 
+// INFO: Library imports
 import { Router } from "express";
+
+// INFO: Route imports
 import { authRouter } from "./auth.route";
-import { log } from "../../middlewares/logger";
+import { ticketRouter } from "./ticket.route";
+import { healthRouter } from "./health.route";
 
 const mainRouter = Router();
 
-mainRouter.use("/health", (req, res) => {
-  log.info("Health check request received from: " + req.ip);
-  res.status(200).json({
-    message: "Server is up and running",
-    status: "success",
-  });
-});
-
 mainRouter.use("/auth", authRouter);
+mainRouter.use("/ticket", ticketRouter);
+mainRouter.use("/health", healthRouter);
 
-//? TODO: Add other routes here
-// @ticket
+// TODO: Add other routes here
 // @user
 // @event
 // @admin

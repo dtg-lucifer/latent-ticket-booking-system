@@ -63,3 +63,26 @@ export class AuthError extends Error {
     this.name = "AuthError";
   }
 }
+
+/**
+ * @description Error class for API related errors
+ * It extends the AuthError class
+ * and can be used to throw API errors with specific status codes.
+ * @param message - The error message
+ * @param statusCode - The HTTP status code associated with the error
+ * @example
+ * throw new APIError("Invalid API key", 401);
+ * throw new APIError("Resource not found", 404);
+ * @example
+ * const error = new APIError("Invalid API key", 401);
+ * console.error(error.message); // "Invalid API key"
+ * console.error(error.statusCode); // 401
+ * console.error(error.name); // "APIError"
+ * console.error(error.requestId); // null
+ */
+export class APIError extends AuthError {
+  constructor(message: string, statusCode: number) {
+    super(message, statusCode);
+    this.name = "APIError";
+  }
+}

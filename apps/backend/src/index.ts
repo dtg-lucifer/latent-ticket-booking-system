@@ -4,13 +4,12 @@
  * @repo https://github.com/dtg-lucifer/latent-ticket-booking-system
  */
 
-import express from "express";
+import express, { NextFunction, Request, Response } from "express";
 import { log, loggerMiddleware } from "./middlewares/logger";
 import { mainRouter } from "./routes/v1/_index";
-import { StatusCodes } from "http-status-codes";
 import dotenv from "dotenv";
 import { errorHandler } from "./middlewares/error_handler";
-import { AuthError } from "./utils/types";
+import { APIError } from "./utils/types";
 
 dotenv.config();
 
@@ -28,7 +27,7 @@ app.use(`${API_VERSION}`, mainRouter);
 
 // Catch 404 and forward to error handler
 app.use((req, res, next) => {
-  const err = new AuthError("Not Found", 404);
+  const err = new APIError("Not Found", 404);
   next(err);
 });
 
