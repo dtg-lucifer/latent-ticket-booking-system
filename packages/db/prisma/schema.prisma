@@ -27,6 +27,15 @@ enum SeatStatus {
   BOOKED
 }
 
+enum BookingStatus {
+  PENDING
+  PENDING_PAYMENT
+  TIMEOUT
+  FILLED
+  CONFIRMED
+  CANCELLED
+}
+
 model User {
   id       String    @id @default(uuid())
   number   String    @unique
@@ -36,61 +45,96 @@ model User {
   role     Role      @default(USER)
   bookings Booking[]
   payments Payment[]
+  Event    Event[]
+
+  @@index([email], name: "user_email_index")
+  @@index([number], name: "user_number_index")
 }
 
-model Admin {
-  id       String  @id @default(uuid())
-  number   String  @unique
-  name     String
-  email    String  @unique
-  verified Boolean @default(false)
-  role     Role    @default(ADMIN)
-  events   Event[]
-}
+//?----------------------------------------------------------------
+//? Admin model is commented out as it is not used in the current schema
+// model Admin {
+//   id       String  @id @default(uuid())
+//   number   String  @unique
+//   name     String
+//   email    String  @unique
+//   verified Boolean @default(false)
+//   role     Role    @default(ADMIN)
+//   events   Event[]
+
+//   @@index([email], name: "admin_email_index")
+//   @@index([number], name: "admin_number_index")
+// }
+//?-----------------------------------------------------------------
 
 model Event {
-  id          String    @id @default(uuid())
-  title       String
-  description String
-  banner      String
-  adminId     String
-  admin       Admin     @relation(fields: [adminId], references: [id])
-  bookings    Booking[]
-  payments    Payment[]
+  id             String     @id @default(uuid())
+  title          String
+  description    String
+  banner         String
+  adminId        String
+  admin          User       @relation(fields: [adminId], references: [id])
+  bookings       Booking[]
+  payments       Payment[]
+  startTime      DateTime
+  endTime        DateTime
+  location       String
+  createdAt      DateTime   @default(now())
+  availableSeats Int
+  totalSeats     Int
+  seatTypes      SeatType[]
+
+  @@index([startTime], name: "event_start_time_index")
+  @@index([adminId], name: "event_admin_index")
 }
 
 model Booking {
-  id      String @id @default(uuid())
-  eventId String
-  userId  String
+  id      String        @id @default(uuid())
   seats   Seat[]
-  event   Event  @relation(fields: [eventId], references: [id])
-  user    User   @relation(fields: [userId], references: [id])
+  eventId String
+  event   Event         @relation(fields: [eventId], references: [id])
+  userId  String
+  user    User          @relation(fields: [userId], references: [id])
+  status  BookingStatus @default(PENDING)
+
+  @@index([eventId], name: "booking_event_index")
+  @@index([userId], name: "booking_user_index")
 }
 
 model SeatType {
-  id          String @id @default(uuid())
+  id          String  @id @default(uuid())
   name        String
   event       String
   price       Int
   description String
-  seat        Seat[]
+  seats       Seat[]
+  Event       Event?  @relation(fields: [eventId], references: [id])
+  eventId     String?
+
+  @@index([eventId], name: "seat_type_event_index")
+  @@index([name], name: "seat_type_name_index")
 }
 
 model Seat {
   id         String     @id @default(uuid())
   status     SeatStatus @default(AVAILABLE)
-  booking    Booking?   @relation(fields: [bookingId], references: [id])
   bookingId  String?
-  type       SeatType   @relation(fields: [seatTypeId], references: [id])
+  booking    Booking?   @relation(fields: [bookingId], references: [id])
   seatTypeId String
+  type       SeatType   @relation(fields: [seatTypeId], references: [id])
+
+  @@index([bookingId], name: "seat_booking_index")
+  @@index([seatTypeId], name: "seat_seat_type_index")
 }
 
 model Payment {
   id      String       @id @default(uuid())
-  eventId String
-  userId  String
   status  PaymentState @default(PENDING)
+  eventId String
   event   Event        @relation(fields: [eventId], references: [id])
+  userId  String
   user    User         @relation(fields: [userId], references: [id])
+
+  @@index([eventId], name: "payment_event_index")
+  @@index([userId], name: "payment_user_index")
 }

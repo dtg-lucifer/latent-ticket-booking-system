@@ -8,20 +8,27 @@
 // INFO: Library imports
 import { Router } from "express";
 
+// INFO: Middleware imports
+import { AuthGuard } from "../../middlewares/auth_middleware";
+
 // INFO: Route imports
 import { authRouter } from "./auth.route";
 import { ticketRouter } from "./ticket.route";
 import { healthRouter } from "./health.route";
+import { eventRouter } from "./event.route";
+import { adminRouter } from "./admin.route";
+import { userRouter } from "./user.route";
 
 const mainRouter = Router();
 
+// INFO: Generate routes
 mainRouter.use("/auth", authRouter);
-mainRouter.use("/ticket", ticketRouter);
 mainRouter.use("/health", healthRouter);
 
-// TODO: Add other routes here
-// @user
-// @event
-// @admin
+// INFO: Protected routes
+mainRouter.use("/ticket", AuthGuard, ticketRouter);
+mainRouter.use("/event", AuthGuard, eventRouter);
+mainRouter.use("/admin", AuthGuard, adminRouter);
+mainRouter.use("/user", AuthGuard, userRouter);
 
 export { mainRouter };
