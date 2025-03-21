@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import { StatusCodes } from "http-status-codes";
 import { JWT_SECRET } from "../config";
 import { log } from "./logger";
+import { __CACHE } from "..";
 
 /**
  * Authentication guard to protect routes that verifies JWT tokens
@@ -13,7 +14,7 @@ import { log } from "./logger";
  * @param res Express response object
  * @param next Express next function
  */
-export const AuthGuard = (req: Request, res: Response, next: NextFunction) => {
+const AuthGuard = (req: Request, res: Response, next: NextFunction) => {
   // Skip auth check for auth-related routes
   if (req.path.startsWith("/api/v1/auth") && req.headers.authorization) {
     next();
@@ -48,9 +49,14 @@ export const AuthGuard = (req: Request, res: Response, next: NextFunction) => {
 
   // verify the token
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET) as unknown as {
+      id: string;
+      requestId: string;
+      iat: number;
+      exp: number;
+    };
     // Attach the decoded token to the request for use in other middleware/routes
-    req.user = decoded;
+    __CACHE.set("auth_user", decoded);
     log.info(
       `Authentication successful for user ${decoded} on path ${req.path}`
     );

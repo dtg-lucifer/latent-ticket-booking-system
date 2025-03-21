@@ -89,13 +89,15 @@ model Event {
 }
 
 model Booking {
-  id      String        @id @default(uuid())
-  seats   Seat[]
-  eventId String
-  event   Event         @relation(fields: [eventId], references: [id])
-  userId  String
-  user    User          @relation(fields: [userId], references: [id])
-  status  BookingStatus @default(PENDING)
+  id        String        @id @default(uuid())
+  seats     Seat[]
+  eventId   String
+  event     Event         @relation(fields: [eventId], references: [id])
+  userId    String
+  user      User          @relation(fields: [userId], references: [id])
+  status    BookingStatus @default(PENDING)
+  payment   Payment?
+  createdAt DateTime      @default(now())
 
   @@index([eventId], name: "booking_event_index")
   @@index([userId], name: "booking_user_index")
@@ -104,7 +106,6 @@ model Booking {
 model SeatType {
   id          String  @id @default(uuid())
   name        String
-  event       String
   price       Int
   description String
   seats       Seat[]
@@ -128,13 +129,19 @@ model Seat {
 }
 
 model Payment {
-  id      String       @id @default(uuid())
-  status  PaymentState @default(PENDING)
-  eventId String
-  event   Event        @relation(fields: [eventId], references: [id])
-  userId  String
-  user    User         @relation(fields: [userId], references: [id])
+  id        String       @id @default(uuid())
+  status    PaymentState @default(PENDING)
+  eventId   String
+  event     Event        @relation(fields: [eventId], references: [id])
+  userId    String
+  user      User         @relation(fields: [userId], references: [id])
+  bookingId String?      @unique
+  booking   Booking?     @relation(fields: [bookingId], references: [id])
+  amount    Int
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
 
   @@index([eventId], name: "payment_event_index")
   @@index([userId], name: "payment_user_index")
+  @@index([bookingId], name: "payment_booking_index")
 }

@@ -10,10 +10,13 @@ import { mainRouter } from "./routes/v1/_index";
 import dotenv from "dotenv";
 import { errorHandler } from "./middlewares/error_handler";
 import { APIError } from "./utils/types";
+import { Cache } from "./lib/cache";
 
 dotenv.config();
 
+// INFO: Initializations
 const app = express();
+export const __CACHE = new Cache();
 
 const API_VERSION = "/api/v1";
 

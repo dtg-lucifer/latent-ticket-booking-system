@@ -9,7 +9,7 @@
 import { Router } from "express";
 
 // INFO: Middleware imports
-import { AuthGuard } from "../../middlewares/auth_middleware";
+import { middlewares } from "../../middlewares/auth_middleware";
 
 // INFO: Route imports
 import { authRouter } from "./auth.route";
@@ -26,9 +26,9 @@ mainRouter.use("/auth", authRouter);
 mainRouter.use("/health", healthRouter);
 
 // INFO: Protected routes
-mainRouter.use("/ticket", AuthGuard, ticketRouter);
-mainRouter.use("/event", AuthGuard, eventRouter);
-mainRouter.use("/admin", AuthGuard, adminRouter);
-mainRouter.use("/user", AuthGuard, userRouter);
+mainRouter.use("/ticket", middlewares.AuthGuard, ticketRouter);
+mainRouter.use("/event", middlewares.AuthGuard, eventRouter);
+mainRouter.use("/admin", middlewares.AuthGuard, adminRouter);
+mainRouter.use("/user", middlewares.AuthGuard, userRouter);
 
 export { mainRouter };
