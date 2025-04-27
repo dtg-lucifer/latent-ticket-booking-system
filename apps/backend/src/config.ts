@@ -18,3 +18,7 @@ export const OTP_SECRET: string = process.env.OTP_SECRET_KEY ?? "super_secret";
 
 export const ACCOUNTSID = process.env.TWILLIO_LIVE_ACCOUNT_SID;
 export const AUTHTOKEN = process.env.TWILLIO_LIVE_AUTH_TOKEN;
+
+// ---------------------------------------
+
+export const CORS_ORIGINS = ["localhost:3000", "http://localhost:3000"];

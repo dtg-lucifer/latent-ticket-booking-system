@@ -4,6 +4,7 @@
  */
 
 import { User } from "@prisma/client";
+import { log } from "../middlewares/logger";
 
 /**
  * @description Safe user schema so that no sensitive data is exposed
@@ -66,23 +67,39 @@ export class AuthError extends Error {
 
 /**
  * @description Error class for API related errors
+ *
  * It extends the AuthError class
- * and can be used to throw API errors with specific status codes.
  * @param message - The error message
  * @param statusCode - The HTTP status code associated with the error
+ * @param requestId - Optional request ID for tracking the error
+ *
  * @example
- * throw new APIError("Invalid API key", 401);
- * throw new APIError("Resource not found", 404);
+ * ```ts
+ * throw new APIError("User not found", 404);
+ * throw new APIError("Invalid credentials", 401, requestId);
+ * ```
  * @example
- * const error = new APIError("Invalid API key", 401);
- * console.error(error.message); // "Invalid API key"
- * console.error(error.statusCode); // 401
+ * ```ts
+ * const error = new APIError("User not found", 404);
+ * console.error(error.message); // "User not found"
+ * console.error(error.statusCode); // 404
  * console.error(error.name); // "APIError"
  * console.error(error.requestId); // null
+ * ```
  */
 export class APIError extends AuthError {
-  constructor(message: string, statusCode: number) {
-    super(message, statusCode);
+  constructor(
+    message: string,
+    statusCode: number,
+    requestId: string | null = null
+  ) {
+    super(message, statusCode, requestId);
     this.name = "APIError";
+  }
+
+  logError() {
+    log.error(
+      `APIError: ${this.message}, StatusCode: ${this.statusCode}, RequestId: ${this.requestId}`
+    );
   }
 }

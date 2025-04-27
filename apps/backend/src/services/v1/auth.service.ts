@@ -89,6 +89,8 @@ async function signUpUser(number: string, req: Request): Promise<AuthResponse> {
     verified: false,
     done: true,
     token: null,
+    // Expose OTP for testing (never in production)
+    ...(process.env.NODE_ENV !== "production" && { otp }),
   };
 }
 
@@ -229,6 +231,7 @@ async function loginUser(number: string, req: Request): Promise<AuthResponse> {
     verified: false,
     done: true,
     token: null,
+    ...(process.env.NODE_ENV !== "production" && { otp }),
   };
 }
 

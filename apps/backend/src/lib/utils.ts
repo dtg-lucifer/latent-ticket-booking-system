@@ -104,6 +104,10 @@ function verifyAlphanumericOTP(
     requestId,
     currentTime
   );
+  // Add debug log
+  log.info(
+    `[OTP VERIFY] number=${phoneNumber}, requestId=${requestId}, inputOTP=${inputOTP}, expectedCurrentOTP=${currentOTP}`
+  );
   if (currentOTP === inputOTP.toUpperCase()) {
     return true;
   }
@@ -114,6 +118,9 @@ function verifyAlphanumericOTP(
     secret,
     requestId,
     currentTime - 5 * 60 * 1000
+  );
+  log.info(
+    `[OTP VERIFY] number=${phoneNumber}, requestId=${requestId}, inputOTP=${inputOTP}, expectedPreviousOTP=${previousOTP}`
   );
   return previousOTP === inputOTP.toUpperCase();
 }

@@ -49,7 +49,7 @@ const AuthGuard = (req: Request, res: Response, next: NextFunction) => {
 
   // verify the token
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as unknown as {
+    const decoded = jwt.verify(token, JWT_SECRET) as {
       id: string;
       requestId: string;
       iat: number;

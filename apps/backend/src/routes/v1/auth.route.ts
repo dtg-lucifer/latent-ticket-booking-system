@@ -64,7 +64,7 @@ authRouter.post("/verify", bodyValidator(OtpSchema), async (req, res) => {
       otp,
       requestId,
       req,
-      login ? true : false
+      login === "true" ? true : false
     );
   } catch (error) {
     res.status((error as AuthError).statusCode).json({
